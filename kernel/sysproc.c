@@ -69,15 +69,35 @@ sys_sleep(void)
   return 0;
 }
 
-
-#ifdef LAB_PGTBL
+//#ifdef LAB_PGTBL
 int
 sys_pgaccess(void)
 {
-  // lab pgtbl: your code here.
+
+  uint64 start_va;
+  int len;
+  uint64 uvm_result_buffer_va;
+
+  argaddr(0, &start_va);
+  argint(1, &len);
+  argaddr(2, &uvm_result_buffer_va);
+  pagetable_t pt = myproc()->pagetable;
+  int result_buf = 0;
+
+  pgaccess(pt, start_va, len, &result_buf);
+  if (result_buf == -1) {
+    return -1;
+  }
+  for (int i = 0; i < 32; i++) {
+      if (result_buf & (1 << i)) {
+          printf("%d on\n", i);
+      }
+  }
+  copyout(pt, uvm_result_buffer_va, (char*)&result_buf, sizeof(int));
   return 0;
 }
-#endif
+//#endif
+// todo return the ifdef
 
 uint64
 sys_kill(void)

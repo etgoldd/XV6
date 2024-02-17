@@ -477,3 +477,25 @@ vmprint(pagetable_t pagetable)
 
     }
 }
+
+#define MAX_PAGES_SCANNED 32
+void
+pgaccess(pagetable_t pt, uint64 start_va, int len, int *abits) {
+    if (len > MAX_PAGES_SCANNED) {
+        *abits = -1;
+        return;
+    }
+    uint64 va;
+    pte_t* pte;
+    for (int i = 0; i < len; i++) {
+        va = start_va + i * PGSIZE;
+        pte = walk(pt, va, 0);
+        if ((*pte & PTE_A) == 0) {
+            // page is invalid or hasn't been accessed
+            continue;
+        }
+        *abits |= 1 << i;
+        *pte &= ~PTE_A;
+        // Clearing the access bit, so we don't double read it.
+    }
+}
